@@ -23,6 +23,9 @@ const getAllProducts = async (req, res, next) => {
 
 //CREATE a new Product  ---> Admin
 const createProduct = async (req, res, next) => {
+  req.body.user = req.user._id;
+  // console.log(req.user);
+
   const product = await Product.create(req.body);
 
   //201 means created
