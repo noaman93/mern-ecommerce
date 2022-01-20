@@ -27,6 +27,16 @@ const errorHandlerMiddleware = (err, req, res, next) => {
     customError.statusCode = 404;
   }
 
+  if (err.name === "JsonWebTokenError") {
+    customError.msg = `Json Web Token is invalid try again`;
+    customError.statusCode = 404;
+  }
+
+  if (err.name === "TokenExpiredError") {
+    customError.msg = `Json Web Token is Expired try again`;
+    customError.statusCode = 404;
+  }
+
   return res.status(customError.statusCode).json({ msg: customError.msg });
 };
 

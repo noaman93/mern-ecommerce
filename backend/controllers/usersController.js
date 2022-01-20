@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const { StatusCodes } = require("http-status-codes");
+const crypto = require("crypto");
+
 const { BadRequestError, NotFoundError } = require("../errors");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
@@ -65,7 +67,7 @@ const forgotPassword = async (req, res, next) => {
 
   if (!user) {
     throw new BadRequestError(
-      `No user exists with is given id : ${req.body.email}`
+      `No user exists with the given id : ${req.body.email}`
     );
   }
 
@@ -79,7 +81,9 @@ const forgotPassword = async (req, res, next) => {
     "host"
   )}/api/v1/password/reset/${resetToken}`;
 
-  const message = `Your Password reset Token is : - \n\nIf you have not requested this email then, please ignore it`;
+  const message = `Your Password reset Token is : - 
+  \n${resetPasswordUrl}
+  \nIf you have not requested this email then, please ignore it`;
 
   try {
     await sendEmail({
@@ -103,8 +107,49 @@ const forgotPassword = async (req, res, next) => {
   }
 };
 
+//Reset Password
+const resetPassword = async (req, res, next) => {
+  //creating token hash
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    throw new BadRequestError(
+      `Reset password token is invalid or has been expired`
+    );
+  }
+
+  if (!req.body.password || !req.body.confirmPassword) {
+    throw new BadRequestError(
+      `Password does not mach with confirm password field`
+    );
+  }
+
+  if (req.body.password !== req.body.confirmPassword) {
+    throw new BadRequestError(
+      `Password does not mach with confirm password field`
+    );
+  }
+
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+  await user.save({ validateBeforeSave: false });
+
+  sendToken(user, 200, res);
+};
+
 module.exports = {
   registerUser,
   loginUser,
   logOutUser,
+  forgotPassword,
+  resetPassword,
 };
