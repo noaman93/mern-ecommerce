@@ -171,7 +171,7 @@ const updatePassword = async (req, res) => {
   }
   user.password = req.body.newPassword;
 
-  await user.save();
+  await user.save({ validateBeforeSave: false });
 
   sendToken(user, 200, res);
 };
