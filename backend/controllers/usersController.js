@@ -146,10 +146,42 @@ const resetPassword = async (req, res, next) => {
   sendToken(user, 200, res);
 };
 
+//Get user details
+const getUserDetails = async (req, res, next) => {
+  const user = await User.findById(req.user._id);
+
+  res.status(200).json({
+    success: true,
+    user,
+  });
+};
+
+// Update user password
+const updatePassword = async (req, res) => {
+  const user = await User.findById(req.user._id).select("+password");
+
+  const isPasswordMatched = user.comparePassword(req.body.oldPassword);
+
+  if (!isPasswordMatched) {
+    throw new BadRequestError(`Old Password is incorrect`);
+  }
+
+  if (req.body.newPassword !== req.body.confirmPassword) {
+    throw new BadRequestError(`Password does not match`);
+  }
+  user.password = req.body.newPassword;
+
+  await user.save();
+
+  sendToken(user, 200, res);
+};
+
 module.exports = {
   registerUser,
   loginUser,
   logOutUser,
   forgotPassword,
   resetPassword,
+  getUserDetails,
+  updatePassword,
 };
