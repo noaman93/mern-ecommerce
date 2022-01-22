@@ -159,8 +159,10 @@ const getUserDetails = async (req, res, next) => {
 // Update user password
 const updatePassword = async (req, res) => {
   const user = await User.findById(req.user._id).select("+password");
+  console.log(user);
 
-  const isPasswordMatched = user.comparePassword(req.body.oldPassword);
+  const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
+  console.log(isPasswordMatched);
 
   if (!isPasswordMatched) {
     throw new BadRequestError(`Old Password is incorrect`);
@@ -171,7 +173,7 @@ const updatePassword = async (req, res) => {
   }
   user.password = req.body.newPassword;
 
-  await user.save({ validateBeforeSave: false });
+  await user.save();
 
   sendToken(user, 200, res);
 };
