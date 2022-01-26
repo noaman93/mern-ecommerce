@@ -130,6 +130,61 @@ const createProductReview = async (req, res) => {
   });
 };
 
+//Get all Reviews of a Product
+const getProductReviews = async (req, res) => {
+  //hum ny as query id deni hai
+  const product = await Product.findById(req.query.id);
+
+  if (!product) {
+    throw new NotFoundError(`Product not found with id ${req.query.id}`);
+  }
+
+  res.status(200).json({
+    success: true,
+    reviews: product.reviews,
+  });
+};
+
+//Delete Reviews of a Product
+const deleteReview = async (req, res) => {
+  const product = await Product.findById(req.query.productId);
+
+  if (!product) {
+    throw new NotFoundError(`Product not found with id ${req.query.productId}`);
+  }
+
+  const reviews = product.reviews.filter(
+    //req.query.id  will be the id of the review which is a {} in model
+    (rev) => rev._id.toString() !== req.query.id.toString()
+  );
+
+  let avg = 0;
+
+  reviews.forEach((rev) => {
+    avg = avg + rev.rating;
+  });
+
+  const ratings = avg / reviews.length;
+
+  const numOfReviews = reviews.length;
+
+  await Product.findByIdAndUpdate(
+    req.query.productId,
+    {
+      reviews,
+      ratings,
+      numOfReviews,
+    },
+    {
+      new: true,
+    }
+  );
+
+  res.status(200).json({
+    success: true,
+  });
+};
+
 module.exports = {
   getAllProducts,
   createProduct,
@@ -137,4 +192,6 @@ module.exports = {
   deleteProduct,
   productDetails,
   createProductReview,
+  getProductReviews,
+  deleteReview,
 };

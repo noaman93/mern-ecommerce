@@ -6,6 +6,8 @@ const {
   deleteProduct,
   productDetails,
   createProductReview,
+  getProductReviews,
+  deleteReview,
 } = require("../controllers/productsControllers");
 const { isAuthenticateUser, authorizeRoles } = require("../middleware/auth");
 
@@ -26,5 +28,11 @@ router.route("/products/:id").get(productDetails);
 
 //create or update new product review
 router.route("/review").put(isAuthenticateUser, createProductReview);
+
+//Get product review and Delete review routes
+router
+  .route("/reviews")
+  .get(getProductReviews)
+  .delete(isAuthenticateUser, deleteReview);
 
 module.exports = router;
