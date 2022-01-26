@@ -159,10 +159,10 @@ const getUserDetails = async (req, res, next) => {
 // Update user password
 const updatePassword = async (req, res) => {
   const user = await User.findById(req.user._id).select("+password");
-  console.log(user);
+  // console.log(user);
 
   const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
-  console.log(isPasswordMatched);
+  // console.log(isPasswordMatched);
 
   if (!isPasswordMatched) {
     throw new BadRequestError(`Old Password is incorrect`);
@@ -178,6 +178,89 @@ const updatePassword = async (req, res) => {
   sendToken(user, 200, res);
 };
 
+//Update user Profile
+const updateUserProfile = async (req, res) => {
+  const { name, email } = req.body;
+
+  const newUserData = {
+    name,
+    email,
+  };
+
+  //We will add cloudniary Avatar later
+
+  const user = await User.findByIdAndUpdate(req.user._id, newUserData, {
+    new: true,
+  });
+
+  res.status(200).json({
+    success: true,
+  });
+};
+
+//Get all users (Admin wants to see all usesr)
+const getAllUsers = async (req, res) => {
+  const users = await User.find();
+
+  res.status(200).json({
+    success: true,
+    users,
+  });
+};
+
+//Get single user (Admin wants to see a single user)
+const getSingleUser = async (req, res) => {
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    throw new BadRequestError(`User does not exist with ID: ${req.params.id}`);
+  }
+
+  res.status(200).json({
+    success: true,
+    user,
+  });
+};
+
+//Update user Role  ---- Admin
+const updateUserRole = async (req, res) => {
+  const { name, email, role } = req.body;
+
+  const newUserData = {
+    name,
+    email,
+    role,
+  };
+
+  const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+    new: true,
+  });
+
+  res.status(200).json({
+    success: true,
+  });
+};
+
+//Delete user   ---- Admin
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    throw new BadRequestError(`User does not exist with ID: ${req.params.id}`);
+  }
+
+  await User.findByIdAndDelete(id);
+
+  // await user.remove();
+
+  res.status(200).json({
+    success: true,
+    message: "User Deleted Successfully",
+  });
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -186,4 +269,9 @@ module.exports = {
   resetPassword,
   getUserDetails,
   updatePassword,
+  updateUserProfile,
+  getAllUsers,
+  getSingleUser,
+  updateUserRole,
+  deleteUser,
 };
